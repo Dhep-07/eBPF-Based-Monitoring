@@ -1,0 +1,40 @@
+# Build output
+
+monitor
+monitor.bpf.o
+monitor.skel.h
+
+# Generated kernel BTF header
+vmlinux.h
+
+# SQLite database
+
+# *.db
+# *.db-shm
+# *.db-wal
+
+# Object files
+
+*.o
+
+# Temporary files
+
+*.tmp
+*.temp
+*~
+
+# Editor files
+
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+
+.DS_Store
+Thumbs.db
+
+# Logs
+
+*.log
