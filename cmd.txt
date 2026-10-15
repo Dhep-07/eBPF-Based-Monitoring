@@ -1,0 +1,3 @@
+chmod +x install_nccl_stack.sh
+bash -n install_nccl_stack.sh
+sudo ./install_nccl_stack.sh
