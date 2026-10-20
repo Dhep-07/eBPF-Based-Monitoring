@@ -56,7 +56,7 @@ def main():
     rank = int(os.environ["RANK"]); world = int(os.environ["WORLD_SIZE"])
     local = int(os.environ.get("LOCAL_RANK", 0))
     torch.cuda.set_device(local)
-    dist.init_process_group("nccl")
+    dist.init_process_group("nccl", device_id=torch.device("cuda", local))
     os.makedirs(args.out_dir, exist_ok=True)
 
     stop = threading.Event()

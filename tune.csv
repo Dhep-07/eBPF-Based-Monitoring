@@ -1,0 +1,11 @@
+episode,fault_class,faulty_rank
+ep0000,none,-1
+ep0001,net,1
+ep0002,disk,0
+ep0003,none,-1
+ep0004,mem,1
+ep0005,net,0
+ep0006,disk,1
+ep0007,cpu,0
+ep0008,mem,0
+ep0009,cpu,1

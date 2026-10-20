@@ -41,7 +41,7 @@ net_stop() {
 
 start() {
   case "$CLS" in
-    cpu)  nohup taskset -c "$CPU_CORES" stress-ng --cpu "$(echo "$CPU_CORES" | tr ',' '\n' | wc -l)" \
+    cpu)  nohup taskset -c "$CPU_CORES" stress-ng --cpu "${CPU_WORKERS:-4}" \
             --cpu-load "$CPU_LOAD" --timeout 120s >/dev/null 2>&1 & echo $! > "$PIDDIR/cpu" ;;
     mem)  nohup stress-ng --vm 2 --vm-bytes "$MEM_VM_BYTES" --vm-method all --timeout 120s \
             >/dev/null 2>&1 & echo $! > "$PIDDIR/mem" ;;

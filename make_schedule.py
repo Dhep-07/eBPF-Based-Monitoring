@@ -23,7 +23,7 @@ for cls in args.classes.split(","):
         r = i % 2 if args.faulty_rank == "alternate" else int(args.faulty_rank)
         eps.append((cls, r))
 rnd.shuffle(eps)
-w = csv.writer(sys.stdout)
+w = csv.writer(sys.stdout, lineterminator="\n")
 w.writerow(["episode", "fault_class", "faulty_rank"])
 for i, (c, r) in enumerate(eps):
     w.writerow([f"ep{i:04d}", c, r])

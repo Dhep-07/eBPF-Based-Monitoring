@@ -25,11 +25,11 @@ export CPU_CORES=${CPU_CORES:-$HARNESS_CPUS}
 mkdir -p "$OUT"; cp -n "$SCHED" "$OUT/schedule.csv" || true
 { date -Is; uname -r; python -c "import torch;print(torch.__version__, torch.cuda.nccl.version())"
   nvidia-smi --query-gpu=driver_version,name --format=csv,noheader
-  echo "STEPS=$STEPS FAULT_START=$FAULT_START FAULT_DUR=$FAULT_DUR HARNESS_CPUS=$HARNESS_CPUS CPU_CORES=$CPU_CORES DATA_FILE=${DATA_FILE:-}"
+  echo "STEPS=$STEPS FAULT_START=$FAULT_START FAULT_DUR=$FAULT_DUR HARNESS_CPUS=$HARNESS_CPUS CPU_CORES=$CPU_CORES PREP_MS=${PREP_MS:-5} CPU_WORKERS=${CPU_WORKERS:-4} DATA_FILE=${DATA_FILE:-}"
   chronyc tracking | head -n 8; } > "$OUT/run_meta_node${NODE_RANK}.txt" 2>&1
 
 n=0
-tail -n +2 "$SCHED" | while IFS=, read -r EP CLS FRANK; do
+tail -n +2 "$SCHED" | tr -d '\r' | while IFS=, read -r EP CLS FRANK; do
   n=$((n+1)); [ "$n" -lt "$FIRST" ] && continue; [ "$n" -gt "$LAST" ] && break
   EPDIR="$OUT/$EP"; mkdir -p "$EPDIR"
   echo none > "$MARKER"
@@ -44,7 +44,7 @@ tail -n +2 "$SCHED" | while IFS=, read -r EP CLS FRANK; do
 
   taskset -c "$HARNESS_CPUS" torchrun --nnodes=2 --nproc_per_node=1 --node_rank="$NODE_RANK" \
     --master_addr="$MASTER_ADDR" --master_port="$MASTER_PORT" \
-    "$REPO/harness.py" --episode "$EP" --out-dir "$EPDIR" --steps "$STEPS" --warmup 30 \
+    "$REPO/harness.py" --episode "$EP" --out-dir "$EPDIR" --steps "$STEPS" --warmup 30 --cpu-prep-ms "${PREP_MS:-5}" \
     ${DATA_FILE:+--data-file "$DATA_FILE"} || echo "episode $EP failed" >> "$OUT/failures.txt"
 
   [ -n "$INJ" ] && { wait "$INJ" || true; }
