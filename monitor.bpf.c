@@ -2,6 +2,9 @@
 #include "vmlinux.h"
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_tracing.h>
+#ifndef PT_REGS_PARM6
+#define PT_REGS_PARM6(x) ((x)->r9)
+#endif
 #include <bpf/bpf_core_read.h>
 
 #define TASK_COMM_LEN 16
