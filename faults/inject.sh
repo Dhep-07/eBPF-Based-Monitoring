@@ -45,7 +45,7 @@ start() {
             --cpu-load "$CPU_LOAD" --timeout 120s >/dev/null 2>&1 & echo $! > "$PIDDIR/cpu" ;;
     mem)  nohup stress-ng --vm 2 --vm-bytes "$MEM_VM_BYTES" --vm-method all --timeout 120s \
             >/dev/null 2>&1 & echo $! > "$PIDDIR/mem" ;;
-    disk) [ -f "$DISK_FILE" ] || fallocate -l "${DISK_SIZE_GB}G" "$DISK_FILE"
+    disk) [ -f "$DISK_FILE" ] || { echo "run prep_datafile.sh first"; exit 2; }
           ( while true; do
               sync; echo 3 | sudo tee /proc/sys/vm/drop_caches >/dev/null
               dd if="$DISK_FILE" of=/dev/null bs=4M count=512 iflag=direct 2>/dev/null
