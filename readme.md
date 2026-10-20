@@ -15,7 +15,7 @@ The current implementation monitors:
 * Process ID and command name
 * CPU core information
 * Event values and timestamps
-* Persistent storage using SQLite
+* Persistent storage using SQLite 
 
 ## Project Structure
 
