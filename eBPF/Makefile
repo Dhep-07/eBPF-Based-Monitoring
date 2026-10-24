@@ -14,8 +14,8 @@ monitor.bpf.o: monitor.bpf.c vmlinux.h
 monitor.skel.h: monitor.bpf.o
 	$(BPFTOOL) gen skeleton $< > $@
 
-monitor: monitor.c monitor.skel.h
-	$(CC) -g -O2 $(INCS) -o $@ monitor.c $(LIBBPF)/lib64/libbpf.a -lelf -lz -lsqlite3
+monitor: monitor.c sampler.c sampler.h monitor.skel.h
+	$(CC) -g -O2 $(INCS) -o $@ monitor.c sampler.c $(LIBBPF)/lib64/libbpf.a -lelf -lz -lsqlite3 -ldl
 
 clean:
 	rm -f monitor monitor.bpf.o monitor.skel.h

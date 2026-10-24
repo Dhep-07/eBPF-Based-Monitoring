@@ -46,6 +46,12 @@ struct agg_counters {
     unsigned long long vic_mem_allocs;
     unsigned long long sys_mem_allocs;
     unsigned long long ringbuf_drops;
+    unsigned long long sys_disk_rd_bytes;
+    unsigned long long sys_disk_wr_bytes;
+    unsigned long long vic_disk_rd_bytes;
+    unsigned long long vic_disk_wr_bytes;
+    unsigned long long vic_cuda_launches;
+    unsigned long long vic_cuda_memcpys;
 };
 
 struct monitor_cfg {
@@ -215,14 +221,30 @@ int trace_tcp_retrans(void *ctx)
 
 /* 4. Disk: Block I/O requests issued (sys includes victim) */
 SEC("tracepoint/block/block_rq_issue")
-int trace_disk_issue(void *ctx)
+int trace_disk_issue(struct trace_event_raw_block_rq *ctx)
 {
     struct agg_counters *st = get_stats();
     if (!st)
         return 0;
+
+    /* nr_sector exists on all kernels; sectors are 512 bytes. */
+    unsigned long long bytes = (unsigned long long)BPF_CORE_READ(ctx, nr_sector) * 512ULL;
+    /* rwbs[0]: 'R' read, 'W' write, 'D' discard, 'F' flush, 'N' none */
+    char op = BPF_CORE_READ(ctx, rwbs[0]);
+    int victim = is_victim_cgroup();
+
     st->sys_disk_reqs += 1;
-    if (is_victim_cgroup())
+    if (victim)
         st->vic_disk_reqs += 1;
+    if (op == 'R') {
+        st->sys_disk_rd_bytes += bytes;
+        if (victim)
+            st->vic_disk_rd_bytes += bytes;
+    } else if (op == 'W') {
+        st->sys_disk_wr_bytes += bytes;
+        if (victim)
+            st->vic_disk_wr_bytes += bytes;
+    }
     return 0;
 }
 
@@ -359,6 +381,29 @@ SEC("uretprobe/cuCtxSynchronize")
 int uretprobe_ctx_sync_exit(struct pt_regs *ctx)
 {
     return record_uprobe_exit(EVENT_CU_CTX_SYNC);
+}
+
+/* GPU activity as seen from the host: kernel launches and async copies */
+SEC("uprobe/cudaLaunchKernel")
+int uprobe_cuda_launch(struct pt_regs *ctx)
+{
+    if (!is_victim_cgroup())
+        return 0;
+    struct agg_counters *st = get_stats();
+    if (st)
+        st->vic_cuda_launches += 1;
+    return 0;
+}
+
+SEC("uprobe/cudaMemcpyAsync")
+int uprobe_cuda_memcpy(struct pt_regs *ctx)
+{
+    if (!is_victim_cgroup())
+        return 0;
+    struct agg_counters *st = get_stats();
+    if (st)
+        st->vic_cuda_memcpys += 1;
+    return 0;
 }
 
 char LICENSE[] SEC("license") = "Dual MIT/GPL";

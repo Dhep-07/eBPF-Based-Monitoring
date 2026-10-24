@@ -1,0 +1,33 @@
+key,val
+hostname,iot-HP-Pro-Tower-400-G9-PCI-Desktop-PC
+kernel,6.8.0-138-generic
+ifname,eno1
+chrony_start,"Reference ID    : 0A0A3195 (10.10.49.149)
+Stratum         : 4
+Ref time (UTC)  : Sat Oct 24 09:09:54 2026
+System time     : 0.000000197 seconds fast of NTP time
+Last offset     : -0.000003397 seconds
+RMS offset      : 0.000033724 seconds
+Frequency       : 8.121 ppm slow
+Residual freq   : -0.007 ppm
+Skew            : 1.125 ppm
+Root delay      : 0.030212509 seconds
+Root dispersion : 0.001134566 seconds
+Update interval : 4.0 seconds
+Leap status     : Normal
+"
+chrony_end,"Reference ID    : 0A0A3195 (10.10.49.149)
+Stratum         : 4
+Ref time (UTC)  : Sat Oct 24 09:10:51 2026
+System time     : 0.000022113 seconds fast of NTP time
+Last offset     : +0.000016557 seconds
+RMS offset      : 0.000023372 seconds
+Frequency       : 6.761 ppm slow
+Residual freq   : +0.406 ppm
+Skew            : 5.748 ppm
+Root delay      : 0.030144751 seconds
+Root dispersion : 0.001441279 seconds
+Update interval : 4.1 seconds
+Leap status     : Normal
+"
+sqlite_step_errors,0

@@ -1,0 +1,38 @@
+iot@iot-HP-Pro-Tower-400-G9-PCI-Desktop-PC:~/Downloads/eBPF-Based-Monitoring/eBPF$ make && ./stress_and_measure.sh /dev/shm/run.db 30
+make: Nothing to be done for 'all'.
+== Clearing old DB ==
+== Starting monitor (WIN_MS=100 SYS_MS=1000 cap=256MB) ==
+NCCL-Eye Monitor active | DB: /dev/shm/run.db | Cgroup: 0 (sys_only=1) | IF: eno1 (idx=2) | CPUs: 28
+Sampling: window=100 ms, sensors=1000 ms, db cap=256 MB
+Sampler: 1 NVIDIA GPU(s) via NVML
+== Phase 1: idle baseline (10s) ==
+                                  == Phase 2: stress for 30s (CPU + RAM + disk + GPU) ==
+                                                                                           (no gpu_burn found - GPU phase skipped)
+                                                                                                                                  == Phase 3: idle cooldown (10s) ==
+                   == Stopping monitor ==
+
+Monitor stopped cleanly (sqlite_errors=0).
+
+================ DB REPORT ================
+DB file size: 0.09 MB
+tbl             rows
+--------------  ----
+window_metrics  542 
+system_metrics  55  
+gpu_metrics     55  
+collectives     0   
+what         cpu_pct_max  cpu_temp_c_max  ram_used_mb_peak
+-----------  -----------  --------------  ----------------
+peak values  100.0        75.0            7833            
+what       gpu_index  util_max  temp_c_max  power_w_max  mem_mb_max
+---------  ---------  --------  ----------  -----------  ----------
+gpu peaks  0          59        36          10.79        841       
+what       wr_MBps_max  rd_MBps_max  net_tx_MBps_max
+---------  -----------  -----------  ---------------
+disk peak  5300.3       0.0          0.1            
+what           drops
+-------------  -----
+ringbuf drops  0    
+key                 val
+------------------  ---
+sqlite_step_errors  0  
