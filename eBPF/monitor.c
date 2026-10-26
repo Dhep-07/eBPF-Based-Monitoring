@@ -9,6 +9,8 @@
 #include <errno.h>
 #include <sys/utsname.h>
 #include <net/if.h>
+#include <ifaddrs.h>
+#include <arpa/inet.h>
 #include <gelf.h>
 #include <libelf.h>
 #include <bpf/libbpf.h>
@@ -262,6 +264,9 @@ static int init_db(const char *path)
         return -1;
     }
 
+    /* The shipper reads this DB while we write; wait briefly instead of failing */
+    sqlite3_busy_timeout(db, 1000);
+
     /* Use MEMORY journal & synchronous=OFF on /dev/shm so no external -wal files exist */
     sqlite3_exec(db, "PRAGMA journal_mode=MEMORY; PRAGMA synchronous=OFF;", NULL, NULL, NULL);
 
@@ -477,6 +482,27 @@ static void record_system_and_gpu(unsigned long long mono, unsigned long long re
     }
 }
 
+/* IPv4 address of an interface, used as the machine identifier */
+static int get_iface_ip(const char *ifn, char *out, size_t n)
+{
+    struct ifaddrs *ifa, *p;
+    if (getifaddrs(&ifa) != 0)
+        return -1;
+    int rc = -1;
+    for (p = ifa; p; p = p->ifa_next) {
+        if (!p->ifa_addr || p->ifa_addr->sa_family != AF_INET)
+            continue;
+        if (strcmp(p->ifa_name, ifn) != 0)
+            continue;
+        struct sockaddr_in *sa = (struct sockaddr_in *)p->ifa_addr;
+        if (inet_ntop(AF_INET, &sa->sin_addr, out, (socklen_t)n))
+            rc = 0;
+        break;
+    }
+    freeifaddrs(ifa);
+    return rc;
+}
+
 static unsigned long long env_ull(const char *name, unsigned long long def)
 {
     const char *v = getenv(name);
@@ -550,6 +576,20 @@ int main(int argc, char **argv)
         record_meta_kv("kernel", uts.release);
     }
     record_meta_kv("ifname", ifname);
+
+    /* Machine identity for the central DB: IP of the monitored interface.
+     * Override with the MACHINE_IP environment variable if needed. */
+    char machine_ip[64] = "0.0.0.0";
+    const char *ip_env = getenv("MACHINE_IP");
+    if (ip_env && *ip_env)
+        snprintf(machine_ip, sizeof(machine_ip), "%s", ip_env);
+    else if (get_iface_ip(ifname, machine_ip, sizeof(machine_ip)) != 0)
+        fprintf(stderr, "WARNING: no IPv4 address on '%s'; machine_ip=0.0.0.0 (set MACHINE_IP)\n", ifname);
+    record_meta_kv("machine_ip", machine_ip);
+
+    char run_id_str[32];
+    snprintf(run_id_str, sizeof(run_id_str), "%lld", (long long)time(NULL));
+    record_meta_kv("run_id", run_id_str);
     capture_cmd_meta("chrony_start", "chronyc tracking 2>&1");
 
     record_clock_sync_row();
